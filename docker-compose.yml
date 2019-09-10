@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  
+  todo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: demo/todo
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    depends_on:
+      - mongo
+    # networks:
+    #   - backend
+
+  mongo:
+    image: 'mongo:latest'
+    container_name: 'mongo'
+    ports:
+      - '27100:27017'
+    restart: unless-stopped
+    # networks:
+    #   - backend
+    volumes:
+      - ./backup:/data/db
+
+networks:
+  backend: 
