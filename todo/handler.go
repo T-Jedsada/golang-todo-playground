@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/20scoops/todo-crud-go-playgound/models"
 	"github.com/gorilla/mux"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 type (
@@ -38,12 +36,9 @@ func getAllTodos(w http.ResponseWriter, r *http.Request) {
 	defer context.Close()
 	c := context.DbCollection("todo")
 
-	var todos []models.Todo
-	iter := c.Find(nil).Iter()
-	result := models.Todo{}
-	for iter.Next(&result) {
-		todos = append(todos, result)
-	}
+	repo := &TodoRepository{c}
+	todos := repo.getAllTodos()
+
 	j, err := json.Marshal(todosResource{Data: todos})
 	if err != nil {
 		displayAppError(w, err, "An unexpected error has occurred", 500)
@@ -62,8 +57,8 @@ func getATodo(w http.ResponseWriter, r *http.Request) {
 	defer context.Close()
 	c := context.DbCollection("todo")
 
-	var todo models.Todo
-	err := c.Find(bson.M{"_id": bson.ObjectIdHex(id)}).One(&todo)
+	repo := &TodoRepository{c}
+	todo, err := repo.getATodo(id)
 
 	if err != nil {
 		if err == mgo.ErrNotFound {
@@ -98,14 +93,11 @@ func createTodo(w http.ResponseWriter, r *http.Request) {
 	defer context.Close()
 	c := context.DbCollection("todo")
 
+	repo := &TodoRepository{c}
 	todo := &dataResource.Data
+	err = repo.createTodo(todo)
 
-	objID := bson.NewObjectId()
-	todo.Id = objID
-	todo.CreatedOn = time.Now()
-	errInsert := c.Insert(&todo)
-
-	if errInsert != nil {
+	if err != nil {
 		displayAppError(w, err, "Something went wrong", 500)
 		return
 	}
@@ -134,7 +126,8 @@ func deleteTodo(w http.ResponseWriter, r *http.Request) {
 	defer context.Close()
 	c := context.DbCollection("todo")
 
-	err := c.Remove(bson.M{"_id": bson.ObjectIdHex(id)})
+	repo := &TodoRepository{c}
+	err := repo.deleteTodo(id)
 
 	if err != nil {
 		if err == mgo.ErrNotFound {
