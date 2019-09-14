@@ -10,13 +10,10 @@ import (
 	"github.com/20scoops/todo-crud-go-playgound/index"
 	"github.com/20scoops/todo-crud-go-playgound/todo"
 	"github.com/gorilla/mux"
-
-	mgo "gopkg.in/mgo.v2"
 )
 
-var collection *mgo.Collection
-
 func main() {
+
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 	r := mux.NewRouter()
 	r.Use(loggingMiddleware, mux.CORSMethodMiddleware(r))
